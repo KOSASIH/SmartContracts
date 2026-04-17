@@ -3,41 +3,91 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 
-contract RevoluterDEX is ReentrancyGuard {
-    struct Pair { address token0; address token1; uint256 reserve0; uint256 reserve1; }
+contract RevoluterDEX is ReentrancyGuard, Pausable {
+    // Storage
+    mapping(address => mapping(address => uint256)) public reserves;
+    mapping(address => mapping(address => bool)) public isPair;
     
-    mapping(address => mapping(address => Pair)) public pairs;
-    address public immutable RPI;
+    address public immutable owner;
+    uint256 public constant FEE = 30; // 0.3% (30/10000)
     
     event Swap(address indexed sender, address tokenIn, uint256 amountIn, uint256 amountOut);
+    event LiquidityAdded(address indexed provider, address tokenA, uint256 amountA, address tokenB, uint256 amountB);
     
-    constructor(address _rpi) {
-        RPI = _rpi;
+    constructor() {
+        owner = msg.sender;
     }
     
+    // ================== GET AMOUNT OUT (CRITICAL FIX) ==================
+    function getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut) 
+        public pure returns (uint256 amountOut) {
+        require(amountIn > 0, "Insufficient input");
+        require(reserveIn > 0 && reserveOut > 0, "Insufficient liquidity");
+        
+        uint256 amountInWithFee = amountIn * (10000 - FEE);
+        uint256 numerator = amountInWithFee * reserveOut;
+        uint256 denominator = (reserveIn * 10000) + amountInWithFee;
+        amountOut = numerator / denominator;
+    }
+    
+    // ================== SWAP WITH SLIPPAGE PROTECTION ==================
+    function swap(address tokenIn, address tokenOut, uint256 amountIn, uint256 amountOutMin) 
+        external whenNotPaused nonReentrant {
+        require(tokenIn != tokenOut, "Invalid pair");
+        require(isPair[tokenIn][tokenOut], "Pair not exists");
+        
+        uint256 reserveIn = reserves[tokenIn][tokenOut];
+        uint256 reserveOut = reserves[tokenOut][tokenIn];
+        
+        uint256 amountOut = getAmountOut(amountIn, reserveIn, reserveOut);
+        require(amountOut >= amountOutMin, "Insufficient output amount");
+        
+        // Transfer tokens
+        IERC20(tokenIn).transferFrom(msg.sender, address(this), amountIn);
+        IERC20(tokenOut).transfer(msg.sender, amountOut);
+        
+        // Update reserves
+        reserves[tokenIn][tokenOut] += amountIn;
+        reserves[tokenOut][tokenIn] -= amountOut;
+        
+        emit Swap(msg.sender, tokenIn, amountIn, amountOut);
+    }
+    
+    // ================== ADD LIQUIDITY ==================
     function addLiquidity(address tokenA, address tokenB, uint256 amountADesired, uint256 amountBDesired) 
-        external nonReentrant {
-        // Simplified AMM logic - production gunakan Uniswap V2 formula
+        external whenNotPaused nonReentrant {
+        require(amountADesired > 0 && amountBDesired > 0, "Insufficient amounts");
+        
+        if (reserves[tokenA][tokenB] == 0) {
+            isPair[tokenA][tokenB] = true;
+            isPair[tokenB][tokenA] = true;
+        }
+        
         IERC20(tokenA).transferFrom(msg.sender, address(this), amountADesired);
         IERC20(tokenB).transferFrom(msg.sender, address(this), amountBDesired);
         
-        (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-        pairs[token0][token1] = Pair(token0, token1, amountADesired, amountBDesired);
+        reserves[tokenA][tokenB] = amountADesired;
+        reserves[tokenB][tokenA] = amountBDesired;
+        
+        emit LiquidityAdded(msg.sender, tokenA, amountADesired, tokenB, amountBDesired);
     }
     
-    function swap(address tokenIn, address tokenOut, uint256 amountIn) external nonReentrant {
-        require(tokenIn != tokenOut, "Invalid pair");
-        
-        Pair memory pair = pairs[tokenIn][tokenOut];
-        require(pair.reserve0 > 0 && pair.reserve1 > 0, "No liquidity");
-        
-        // Constant product formula (x * y = k)
-        uint256 amountOut = (pair.reserve1 * amountIn) / (pair.reserve0 + amountIn);
-        
-        IERC20(tokenIn).transferFrom(msg.sender, address(this), amountIn);
-        IERC20(tokenOut).transfer(address(msg.sender), amountOut);
-        
-        emit Swap(msg.sender, tokenIn, amountIn, amountOut);
+    // ================== EMERGENCY FUNCTIONS ==================
+    function pause() external {
+        require(msg.sender == owner, "Not owner");
+        _pause();
+    }
+    
+    function unpause() external {
+        require(msg.sender == owner, "Not owner");
+        _unpause();
+    }
+    
+    // Owner can rescue tokens
+    function rescueTokens(address token, address to, uint256 amount) external {
+        require(msg.sender == owner, "Not owner");
+        IERC20(token).transfer(to, amount);
     }
 }
