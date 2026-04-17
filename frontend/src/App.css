@@ -1,0 +1,43 @@
+.App {
+  text-align: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: white;
+}
+
+.App-header h1 {
+  font-size: 3rem;
+  margin: 20px 0;
+}
+
+.connect-btn {
+  background: #f7931a;
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  font-size: 18px;
+  border-radius: 25px;
+  cursor: pointer;
+}
+
+.connect-btn:hover {
+  background: #e67e22;
+}
+
+.dashboard {
+  background: rgba(255,255,255,0.1);
+  padding: 30px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.actions button {
+  margin: 10px;
+  padding: 12px 24px;
+  background: #00d4aa;
+  border: none;
+  border-radius: 15px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
