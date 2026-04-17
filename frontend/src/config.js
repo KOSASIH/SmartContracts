@@ -1,5 +1,5 @@
 export const CONTRACTS = {
-  RPI: "0xYOUR_PI_TESTNET_RPI_ADDRESS",
-  DEX: "0xYOUR_PI_TESTNET_DEX_ADDRESS", 
-  FARM: "0xYOUR_PI_TESTNET_FARM_ADDRESS"
+  RPI: "0xPiTestnetRPI...",  // FROM YOUR DEPLOY
+  DEX: "0xPiTestnetDEX...",
+  FARM: "0xPiTestnetFARM..."
 };
