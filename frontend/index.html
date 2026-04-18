@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+</head>
+<body>
+    <h1>🚀 MyToken DApp</h1>
+    <button id="connect">Connect Wallet</button>
+    <button id="mint">Mint 1000 Tokens</button>
+    <p>Balance: <span id="balance">0</span></p>
+    
+    <script>
+        const TOKEN_ADDRESS = "0xYourDeployedTokenAddress";
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        
+        document.getElementById('connect').onclick = async () => {
+            await provider.send("eth_requestAccounts", []);
+            const signer = provider.getSigner();
+            const token = new ethers.Contract(TOKEN_ADDRESS, ABI, signer);
+            
+            const balance = await token.balanceOf(await signer.getAddress());
+            document.getElementById('balance').innerText = ethers.formatEther(balance);
+        };
+    </script>
+</body>
+</html>
