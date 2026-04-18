@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🔥 MyToken Live DApp</title>
+    <script src="https://cdn.ethers.io/lib/ethers-6.7.umd.min.js"></script>
+    <script src="https://unpkg.com/@metamask/detect-provider"></script>
+</head>
+<body>
+    <h1>🚀 MyToken BSC Testnet</h1>
+    <div>
+        <button id="connect">🔗 Connect MetaMask</button>
+        <button id="balance">💰 Check Balance</button>
+        <button id="transfer">📤 Send 1 Token</button>
+    </div>
+    <pre id="output">Status: Ready...</pre>
+
+    <script>
+        const config = {
+            address: "0xYOUR_TOKEN_ADDRESS", // Ganti hasil deploy
+            abi: [ /* Token ABI from artifacts/contracts/MyToken.sol/MyToken.json */ ]
+        };
+
+        let provider, signer, token;
+
+        document.getElementById('connect').onclick = async () => {
+            if (typeof window.ethereum !== 'undefined') {
+                provider = new ethers.BrowserProvider(window.ethereum);
+                await provider.send("eth_requestAccounts", []);
+                signer = await provider.getSigner();
+                token = new ethers.Contract(config.address, config.abi, signer);
+                document.getElementById('output').textContent = `Connected: ${await signer.getAddress()}`;
+            }
+        };
+
+        document.getElementById('balance').onclick = async () => {
+            if (token) {
+                const balance = await token.balanceOf(await signer.getAddress());
+                document.getElementById('output').textContent = `Balance: ${ethers.formatEther(balance)} MTK`;
+            }
+        };
+    </script>
+</body>
+</html>
