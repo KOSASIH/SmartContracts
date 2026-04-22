@@ -9,7 +9,7 @@
 
 ## 🎯 Policy Objective
 
-TOTAL PELARANGAN penggunaan simbol matematika, fisika, kimia, biologi, dan ilmu lainnya sebagai Coin Ticker atau Crypto Symbol di seluruh ekosistem Web3, blockchain, dan platform keuangan digital.
+**TOTAL BAN** on using mathematical, physical, chemical, biological, and other scientific symbols as **Coin Tickers** or **Crypto Symbols** across all Web3, blockchain, and digital finance ecosystems.
 
 ---
 
