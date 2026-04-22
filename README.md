@@ -1,3 +1,5 @@
+[![Symbol Shield](https://img.shields.io/badge/Science_Symbols-BANNED-red.svg)](POLICY.md)
+[![Zero Tolerance](https://img.shields.io/badge/Policy-v4.0-orange.svg)](POLICY.md)
 
 # 🚀 Revoluter Pi - Pi Network DeFi Ecosystem
 
